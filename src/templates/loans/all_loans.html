@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Quản lý mượn/trả{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-list-ul"></i> Quản lý mượn/trả</h2>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="btn-group" role="group">
+      <a href="{{ url_for('loans.all_loans', status='all') }}" 
+         class="btn btn-{{ 'primary' if status == 'all' else 'outline-primary' }}">
+        Tất cả
+      </a>
+      <a href="{{ url_for('loans.all_loans', status='active') }}" 
+         class="btn btn-{{ 'primary' if status == 'active' else 'outline-primary' }}">
+        Đang mượn
+      </a>
+      <a href="{{ url_for('loans.all_loans', status='overdue') }}" 
+         class="btn btn-{{ 'primary' if status == 'overdue' else 'outline-danger' }}">
+        Quá hạn
+      </a>
+      <a href="{{ url_for('loans.all_loans', status='returned') }}" 
+         class="btn btn-{{ 'primary' if status == 'returned' else 'outline-primary' }}">
+        Đã trả
+      </a>
+    </div>
+    <a href="{{ url_for('reports.borrows_report', status=status) }}" class="btn btn-success float-end">
+      <i class="bi bi-file-pdf"></i> Xuất PDF
+    </a>
+  </div>
+</div>
+
+{% if borrows %}
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead class="table-light">
+        <tr>
+          <th>Độc giả</th>
+          <th>Tên sách</th>
+          <th>Tác giả</th>
+          <th>Ngày mượn</th>
+          <th>Hạn trả</th>
+          <th>Ngày trả</th>
+          <th>Phí trễ hạn</th>
+          <th>Trạng thái</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for borrow in borrows %}
+          <tr class="{% if borrow.is_overdue() and not borrow.returned_at %}table-danger{% elif not borrow.returned_at %}table-warning{% endif %}">
+            <td>{{ borrow.user.name or borrow.user.email }}</td>
+            <td>{{ borrow.book.title }}</td>
+            <td>{{ borrow.book.author or 'N/A' }}</td>
+            <td>{{ borrow.borrowed_at.strftime('%d/%m/%Y') }}</td>
+            <td>{{ borrow.due_date.strftime('%d/%m/%Y') }}</td>
+            <td>{{ borrow.returned_at.strftime('%d/%m/%Y') if borrow.returned_at else '-' }}</td>
+            <td>
+              {% if borrow.fine_amount > 0 %}
+                <span class="text-danger fw-bold">{{ "{:,.0f}".format(borrow.fine_amount) }} VNĐ</span>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>
+              {% if borrow.returned_at %}
+                <span class="badge bg-success">Đã trả</span>
+              {% elif borrow.is_overdue() %}
+                <span class="badge bg-danger">Quá hạn</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">Đang mượn</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if not borrow.returned_at %}
+                <form method="POST" action="{{ url_for('loans.return_book', borrow_id=borrow.id) }}" 
+                      onsubmit="return confirm('Xác nhận trả sách?');" class="d-inline">
+                  <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="bi bi-arrow-return-left"></i> Trả sách
+                  </button>
+                </form>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> Không có bản ghi nào.
+  </div>
+{% endif %}
+{% endblock %}
+

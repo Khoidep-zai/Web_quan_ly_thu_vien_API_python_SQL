@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Sách đã mượn{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-journal-text"></i> Sách đã mượn</h2>
+
+{% if borrows %}
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead class="table-light">
+        <tr>
+          <th>Tên sách</th>
+          <th>Tác giả</th>
+          <th>Ngày mượn</th>
+          <th>Hạn trả</th>
+          <th>Ngày trả</th>
+          <th>Phí trễ hạn</th>
+          <th>Trạng thái</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for borrow in borrows %}
+          <tr class="{% if borrow.is_overdue() and not borrow.returned_at %}table-danger{% elif not borrow.returned_at %}table-warning{% endif %}">
+            <td>{{ borrow.book.title }}</td>
+            <td>{{ borrow.book.author or 'N/A' }}</td>
+            <td>{{ borrow.borrowed_at.strftime('%d/%m/%Y') }}</td>
+            <td>{{ borrow.due_date.strftime('%d/%m/%Y') }}</td>
+            <td>{{ borrow.returned_at.strftime('%d/%m/%Y') if borrow.returned_at else '-' }}</td>
+            <td>
+              {% if borrow.fine_amount > 0 %}
+                <span class="text-danger fw-bold">{{ "{:,.0f}".format(borrow.fine_amount) }} VNĐ</span>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>
+              {% if borrow.returned_at %}
+                <span class="badge bg-success">Đã trả</span>
+              {% elif borrow.is_overdue() %}
+                <span class="badge bg-danger">Quá hạn</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">Đang mượn</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if not borrow.returned_at %}
+                <form method="POST" action="{{ url_for('loans.return_book', borrow_id=borrow.id) }}" 
+                      onsubmit="return confirm('Bạn có chắc chắn muốn trả sách này?');" class="d-inline">
+                  <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="bi bi-arrow-return-left"></i> Trả sách
+                  </button>
+                </form>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> Bạn chưa mượn sách nào.
+    <a href="{{ url_for('books.list_books') }}" class="alert-link">Tìm sách để mượn</a>
+  </div>
+{% endif %}
+{% endblock %}
+

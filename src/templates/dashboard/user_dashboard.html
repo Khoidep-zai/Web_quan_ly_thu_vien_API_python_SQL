@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-speedometer2"></i> Dashboard của tôi</h2>
+
+<div class="row mb-4">
+  <div class="col-md-4">
+    <div class="card stat-card">
+      <div class="card-body">
+        <h5 class="card-title">Sách đang mượn</h5>
+        <h2 class="text-primary">{{ active_borrows|length }}</h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat-card danger">
+      <div class="card-body">
+        <h5 class="card-title">Sách quá hạn</h5>
+        <h2 class="text-danger">{{ overdue_borrows|length }}</h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat-card warning">
+      <div class="card-body">
+        <h5 class="card-title">Đặt trước</h5>
+        <h2 class="text-warning">{{ my_reservations }}</h2>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6 mb-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-journal-text"></i> Sách đang mượn</h5>
+      </div>
+      <div class="card-body">
+        {% if active_borrows %}
+          <div class="list-group">
+            {% for borrow in active_borrows %}
+              <div class="list-group-item {% if borrow.is_overdue() %}list-group-item-danger{% endif %}">
+                <div class="d-flex w-100 justify-content-between">
+                  <h6 class="mb-1">{{ borrow.book.title }}</h6>
+                  {% if borrow.is_overdue() %}
+                    <span class="badge bg-danger">Quá hạn</span>
+                  {% else %}
+                    <span class="badge bg-warning text-dark">Đang mượn</span>
+                  {% endif %}
+                </div>
+                <p class="mb-1"><small>Tác giả: {{ borrow.book.author or 'N/A' }}</small></p>
+                <small>
+                  Hạn trả: <strong>{{ borrow.due_date.strftime('%d/%m/%Y') }}</strong>
+                  {% if borrow.is_overdue() %}
+                    {% set days_overdue = (borrow.calculate_fine() / 0.5)|int %}
+                    | Quá hạn: <span class="text-danger">{{ days_overdue }} ngày</span>
+                    | Phí: <span class="text-danger fw-bold">{{ "{:,.0f}".format(borrow.calculate_fine()) }} VNĐ</span>
+                  {% endif %}
+                </small>
+                {% if not borrow.returned_at %}
+                  <form method="POST" action="{{ url_for('loans.return_book', borrow_id=borrow.id) }}" class="mt-2">
+                    <button type="submit" class="btn btn-sm btn-primary">
+                      <i class="bi bi-arrow-return-left"></i> Trả sách
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted">Bạn chưa mượn sách nào.</p>
+          <a href="{{ url_for('books.list_books') }}" class="btn btn-primary">
+            <i class="bi bi-search"></i> Tìm sách để mượn
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6 mb-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-clock-history"></i> Lịch sử mượn gần đây</h5>
+      </div>
+      <div class="card-body">
+        {% if recent_borrows %}
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Tên sách</th>
+                  <th>Ngày mượn</th>
+                  <th>Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for borrow in recent_borrows %}
+                  <tr>
+                    <td>{{ borrow.book.title }}</td>
+                    <td>{{ borrow.borrowed_at.strftime('%d/%m/%Y') }}</td>
+                    <td>
+                      {% if borrow.returned_at %}
+                        <span class="badge bg-success">Đã trả</span>
+                      {% else %}
+                        <span class="badge bg-warning text-dark">Đang mượn</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <a href="{{ url_for('loans.my_loans') }}" class="btn btn-sm btn-outline-primary mt-2">
+            Xem tất cả
+          </a>
+        {% else %}
+          <p class="text-muted">Chưa có lịch sử mượn.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

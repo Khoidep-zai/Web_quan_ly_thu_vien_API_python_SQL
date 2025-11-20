@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}{{ book.title }}{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-md-8">
+    <div class="card">
+      {% if book.image_path %}
+        <img src="{{ url_for('static', filename=book.image_path) }}" 
+             class="card-img-top" 
+             alt="{{ book.title }}"
+             style="max-height: 400px; object-fit: contain; background: #f8f9fa;">
+      {% endif %}
+      <div class="card-body">
+        <h2 class="card-title">{{ book.title }}</h2>
+        <hr>
+        <dl class="row">
+          <dt class="col-sm-3"><i class="bi bi-person"></i> Tác giả:</dt>
+          <dd class="col-sm-9">{{ book.author or 'N/A' }}</dd>
+          
+          <dt class="col-sm-3"><i class="bi bi-tag"></i> Thể loại:</dt>
+          <dd class="col-sm-9">{{ book.category or 'N/A' }}</dd>
+          
+          {% if book.isbn %}
+          <dt class="col-sm-3"><i class="bi bi-upc"></i> ISBN:</dt>
+          <dd class="col-sm-9">{{ book.isbn }}</dd>
+          {% endif %}
+          
+          <dt class="col-sm-3"><i class="bi bi-stack"></i> Số lượng:</dt>
+          <dd class="col-sm-9">
+            Có sẵn: <strong>{{ book.available_copies }}</strong> / Tổng: <strong>{{ book.total_copies }}</strong>
+          </dd>
+        </dl>
+        
+        <div class="mt-4">
+          {% if current_user.is_authenticated %}
+            {% if book.available_copies > 0 %}
+              <form method="POST" action="{{ url_for('loans.borrow_book', book_id=book.id) }}" class="d-inline">
+                <button type="submit" class="btn btn-success btn-lg">
+                  <i class="bi bi-book"></i> Mượn sách
+                </button>
+              </form>
+            {% else %}
+              <form method="POST" action="{{ url_for('reservations.reserve_book', book_id=book.id) }}" class="d-inline">
+                <button type="submit" class="btn btn-warning btn-lg">
+                  <i class="bi bi-bookmark-star"></i> Đặt trước
+                </button>
+              </form>
+            {% endif %}
+          {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">
+              <i class="bi bi-box-arrow-in-right"></i> Đăng nhập để mượn sách
+            </a>
+          {% endif %}
+          
+          <a href="{{ url_for('books.list_books') }}" class="btn btn-outline-secondary btn-lg">
+            <i class="bi bi-arrow-left"></i> Quay lại
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  {% if current_user.is_authenticated and current_user.is_admin %}
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="bi bi-gear"></i> Quản lý</h5>
+        </div>
+        <div class="card-body">
+          <a href="{{ url_for('books.edit', book_id=book.id) }}" class="btn btn-warning w-100 mb-2">
+            <i class="bi bi-pencil"></i> Sửa thông tin
+          </a>
+          <form method="POST" action="{{ url_for('books.delete', book_id=book.id) }}" 
+                onsubmit="return confirm('Bạn có chắc chắn muốn xóa sách này?');">
+            <button type="submit" class="btn btn-danger w-100">
+              <i class="bi bi-trash"></i> Xóa sách
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+

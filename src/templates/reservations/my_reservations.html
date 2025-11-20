@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Đặt trước của tôi{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-bookmark-star"></i> Đặt trước của tôi</h2>
+
+{% if reservations %}
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead class="table-light">
+        <tr>
+          <th>Tên sách</th>
+          <th>Tác giả</th>
+          <th>Ngày đặt trước</th>
+          <th>Trạng thái</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for reservation in reservations %}
+          <tr>
+            <td>{{ reservation.book.title }}</td>
+            <td>{{ reservation.book.author or 'N/A' }}</td>
+            <td>{{ reservation.reserved_at.strftime('%d/%m/%Y %H:%M') }}</td>
+            <td>
+              {% if reservation.fulfilled %}
+                <span class="badge bg-success">Đã thực hiện</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">Chờ sách có sẵn</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if not reservation.fulfilled %}
+                <form method="POST" action="{{ url_for('reservations.cancel_reservation', reservation_id=reservation.id) }}" 
+                      onsubmit="return confirm('Bạn có chắc chắn muốn hủy đặt trước?');" class="d-inline">
+                  <button type="submit" class="btn btn-sm btn-danger">
+                    <i class="bi bi-x-circle"></i> Hủy
+                  </button>
+                </form>
+                {% if reservation.book.available_copies > 0 %}
+                  <a href="{{ url_for('books.detail', book_id=reservation.book.id) }}" class="btn btn-sm btn-success">
+                    <i class="bi bi-book"></i> Mượn ngay
+                  </a>
+                {% endif %}
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> Bạn chưa đặt trước sách nào.
+    <a href="{{ url_for('books.list_books') }}" class="alert-link">Tìm sách để đặt trước</a>
+  </div>
+{% endif %}
+{% endblock %}
+

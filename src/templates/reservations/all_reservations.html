@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Quản lý đặt trước{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-bookmark-check"></i> Quản lý đặt trước</h2>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="btn-group" role="group">
+      <a href="{{ url_for('reservations.all_reservations', fulfilled='false') }}" 
+         class="btn btn-{{ 'primary' if request.args.get('fulfilled') != 'true' else 'outline-primary' }}">
+        Chưa thực hiện
+      </a>
+      <a href="{{ url_for('reservations.all_reservations', fulfilled='true') }}" 
+         class="btn btn-{{ 'primary' if request.args.get('fulfilled') == 'true' else 'outline-primary' }}">
+        Đã thực hiện
+      </a>
+    </div>
+  </div>
+</div>
+
+{% if reservations %}
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead class="table-light">
+        <tr>
+          <th>Độc giả</th>
+          <th>Tên sách</th>
+          <th>Tác giả</th>
+          <th>Ngày đặt trước</th>
+          <th>Trạng thái</th>
+          <th>Sách có sẵn</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for reservation in reservations %}
+          <tr>
+            <td>{{ reservation.user.name or reservation.user.email }}</td>
+            <td>{{ reservation.book.title }}</td>
+            <td>{{ reservation.book.author or 'N/A' }}</td>
+            <td>{{ reservation.reserved_at.strftime('%d/%m/%Y %H:%M') }}</td>
+            <td>
+              {% if reservation.fulfilled %}
+                <span class="badge bg-success">Đã thực hiện</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">Chờ sách có sẵn</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if reservation.book.available_copies > 0 %}
+                <span class="badge bg-success">{{ reservation.book.available_copies }} bản</span>
+              {% else %}
+                <span class="badge bg-danger">0 bản</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> Không có đặt trước nào.
+  </div>
+{% endif %}
+{% endblock %}
+

@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: library_db
+    environment:
+      POSTGRES_USER: library_user
+      POSTGRES_PASSWORD: library_password
+      POSTGRES_DB: library_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U library_user -d library_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - library_network
+
+  # Flask Application
+  web:
+    build: .
+    container_name: library_web
+    environment:
+      # Database
+      DATABASE_URL: postgresql://library_user:library_password@db:5432/library_db
+      # Flask
+      SECRET_KEY: ${SECRET_KEY:-change-this-secret-key-in-production}
+      FLASK_APP: src.app:create_app
+      FLASK_ENV: production
+      # Application
+      BORROW_DAYS_DEFAULT: ${BORROW_DAYS_DEFAULT:-14}
+      REMINDER_DAYS_BEFORE: ${REMINDER_DAYS_BEFORE:-3}
+      PER_PAGE: ${PER_PAGE:-20}
+      FINE_PER_DAY: ${FINE_PER_DAY:-0.5}
+      # Email (tùy chọn)
+      MAIL_SERVER: ${MAIL_SERVER:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USE_TLS: ${MAIL_USE_TLS:-True}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_DEFAULT_SENDER: ${MAIL_DEFAULT_SENDER:-}
+    volumes:
+      - ./static/uploads:/app/static/uploads
+      - ./migrations:/app/migrations
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - library_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  library_network:
+    driver: bridge

@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Trang chủ - Hệ thống quản lý thư viện{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-lg-8 mx-auto">
+    <div class="text-center mb-5">
+      <h1 class="display-4">
+        <i class="bi bi-book"></i> Chào mừng đến với hệ thống quản lý thư viện
+      </h1>
+      <p class="lead text-muted">Quản lý mượn/trả sách, tìm kiếm sách, và quản lý độc giả một cách dễ dàng</p>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">
+          <i class="bi bi-search"></i> Tìm kiếm sách
+        </h5>
+        <form method="get" action="{{ url_for('books.list_books') }}">
+          <div class="input-group">
+            <input type="text" name="q" class="form-control form-control-lg" 
+                   placeholder="Tìm theo tên sách, tác giả, thể loại, ISBN..." 
+                   value="{{ request.args.get('q', '') }}">
+            <button class="btn btn-primary btn-lg" type="submit">
+              <i class="bi bi-search"></i> Tìm kiếm
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    {% if current_user.is_authenticated %}
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <div class="card stat-card">
+            <div class="card-body">
+              <h5 class="card-title">
+                <i class="bi bi-journal-text text-primary"></i> Sách đang mượn
+              </h5>
+              <p class="card-text">
+                <a href="{{ url_for('loans.my_loans') }}" class="btn btn-outline-primary btn-sm">
+                  Xem chi tiết
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="card stat-card success">
+            <div class="card-body">
+              <h5 class="card-title">
+                <i class="bi bi-bookmark-star text-success"></i> Đặt trước
+              </h5>
+              <p class="card-text">
+                <a href="{{ url_for('reservations.my_reservations') }}" class="btn btn-outline-success btn-sm">
+                  Xem chi tiết
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="card stat-card warning">
+            <div class="card-body">
+              <h5 class="card-title">
+                <i class="bi bi-speedometer2 text-warning"></i> Dashboard
+              </h5>
+              <p class="card-text">
+                <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-warning btn-sm">
+                  Xem thống kê
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="card">
+        <div class="card-body text-center">
+          <h5 class="card-title">Bắt đầu sử dụng hệ thống</h5>
+          <p class="card-text">Đăng nhập hoặc đăng ký để mượn sách và sử dụng các tính năng khác</p>
+          <a href="{{ url_for('auth.login') }}" class="btn btn-primary me-2">
+            <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
+          </a>
+          <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary">
+            <i class="bi bi-person-plus"></i> Đăng ký
+          </a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

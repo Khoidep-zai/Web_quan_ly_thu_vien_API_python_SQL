@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% block title %}Danh sách sách{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2><i class="bi bi-book-half"></i> Danh sách sách</h2>
+  {% if current_user.is_authenticated and current_user.is_admin %}
+    <a href="{{ url_for('books.add') }}" class="btn btn-primary">
+      <i class="bi bi-plus-circle"></i> Thêm sách mới
+    </a>
+  {% endif %}
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="get" action="{{ url_for('books.list_books') }}">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Tìm kiếm</label>
+          <input type="text" name="q" class="form-control" 
+                 placeholder="Tên sách, tác giả, thể loại, ISBN..." 
+                 value="{{ q }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Thể loại</label>
+          <select name="category" class="form-select">
+            <option value="">Tất cả</option>
+            {% for cat in categories %}
+              <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Tác giả</label>
+          <select name="author" class="form-select">
+            <option value="">Tất cả</option>
+            {% for auth in authors %}
+              <option value="{{ auth }}" {% if author == auth %}selected{% endif %}>{{ auth }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">&nbsp;</label>
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-search"></i> Tìm
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if books %}
+  <div class="row">
+    {% for book in books %}
+      <div class="col-md-4 mb-4">
+        <div class="card h-100">
+          {% if book.image_path %}
+            <img src="{{ url_for('static', filename=book.image_path) }}" 
+                 class="card-img-top" 
+                 alt="{{ book.title }}"
+                 style="height: 250px; object-fit: cover;">
+          {% else %}
+            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                 style="height: 250px;">
+              <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+            </div>
+          {% endif %}
+          <div class="card-body">
+            <h5 class="card-title">{{ book.title }}</h5>
+            <p class="card-text">
+              <small class="text-muted">
+                <i class="bi bi-person"></i> {{ book.author or 'N/A' }}<br>
+                <i class="bi bi-tag"></i> {{ book.category or 'N/A' }}<br>
+                {% if book.isbn %}
+                  <i class="bi bi-upc"></i> {{ book.isbn }}<br>
+                {% endif %}
+                <i class="bi bi-stack"></i> Có sẵn: {{ book.available_copies }}/{{ book.total_copies }}
+              </small>
+            </p>
+            <div class="d-flex gap-2">
+              <a href="{{ url_for('books.detail', book_id=book.id) }}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-eye"></i> Chi tiết
+              </a>
+              {% if current_user.is_authenticated %}
+                {% if book.available_copies > 0 %}
+                  <form method="POST" action="{{ url_for('loans.borrow_book', book_id=book.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-success">
+                      <i class="bi bi-book"></i> Mượn
+                    </button>
+                  </form>
+                {% else %}
+                  <form method="POST" action="{{ url_for('reservations.reserve_book', book_id=book.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-warning">
+                      <i class="bi bi-bookmark-star"></i> Đặt trước
+                    </button>
+                  </form>
+                {% endif %}
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  {% if pagination.pages > 1 %}
+    <nav aria-label="Phân trang">
+      <ul class="pagination justify-content-center">
+        {% if pagination.has_prev %}
+          <li class="page-item">
+            <a class="page-link" href="{{ url_for('books.list_books', page=pagination.prev_num, q=q, category=category, author=author) }}">Trước</a>
+          </li>
+        {% endif %}
+        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+          {% if page_num %}
+            {% if page_num == pagination.page %}
+              <li class="page-item active">
+                <span class="page-link">{{ page_num }}</span>
+              </li>
+            {% else %}
+              <li class="page-item">
+                <a class="page-link" href="{{ url_for('books.list_books', page=page_num, q=q, category=category, author=author) }}">{{ page_num }}</a>
+              </li>
+            {% endif %}
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+          {% endif %}
+        {% endfor %}
+        {% if pagination.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="{{ url_for('books.list_books', page=pagination.next_num, q=q, category=category, author=author) }}">Sau</a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+{% else %}
+  <div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> Không tìm thấy sách nào.
+  </div>
+{% endif %}
+{% endblock %}
+
