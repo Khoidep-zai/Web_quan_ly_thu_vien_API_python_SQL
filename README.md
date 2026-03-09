@@ -369,9 +369,9 @@ Nếu gặp vấn đề, hãy xem các file hướng dẫn trong thư mục `Hư
 ## 📝 THÔNG TIN DỰ ÁN
 
 - **Mục đích:** Dự án học tập môn Python nâng cao
-- **Ngày tạo:** 2024
-- **Tác giả:** Sinh viên
+- **Ngày tạo:** 2025
+- **Tác giả:** chủ kênh github
 
 ---
 
-> 💡 **Mẹo:** Nếu bạn mới bắt đầu, hãy sử dụng Docker để chạy website nhanh nhất!
+
